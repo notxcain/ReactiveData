@@ -9,6 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "NSManagedObject+ReactiveData.h"
 
-@interface RADFetchRequestFactory : NSObject <RADFetchRequestFactory>
+@interface RADFetchRequestGenerator : NSObject <RADFetchRequestGenerator>
 - (id)initWithEntityName:(NSString *)entityName;
 @end

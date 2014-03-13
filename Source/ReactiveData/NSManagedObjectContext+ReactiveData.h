@@ -18,4 +18,7 @@
 
 - (RACSignal *)rad_executeFetchRequest:(NSFetchRequest *)request;
 - (RACSignal *)rad_executeFetchRequestAndReturnFirstObject:(NSFetchRequest *)request;
+- (RACSignal *)rad_existingObjectWithID:(NSManagedObjectID *)objectID;
+- (RACSignal *)rad_countForFetchRequest:(NSFetchRequest *)request;
+- (RACSignal *)rad_obtainPermanentIDsForObjects:(NSArray *)objects;
 @end

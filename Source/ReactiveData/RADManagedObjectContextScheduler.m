@@ -18,7 +18,7 @@
 	}
 	
 	if (![NSThread isMainThread]) {
-		[self performBlockAndWait:block];
+		[self performBlock:block];
 		return nil;
 	}
 	

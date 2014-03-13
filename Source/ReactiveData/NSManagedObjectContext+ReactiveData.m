@@ -9,6 +9,7 @@
 #import "NSManagedObjectContext+ReactiveData.h"
 #import <ReactiveCocoa/ReactiveCocoa.h>
 #import "RADManagedObjectContextScheduler.h"
+#import "RFCollectionOperations.h"
 
 @implementation NSManagedObjectContext (MagicalSaves)
 + (instancetype)contextWithParent:(NSManagedObjectContext *)parentContext
@@ -55,5 +56,57 @@
 - (RACSignal *)rad_saveToPersistentStore
 {
 	return [[self rad_save] concat:(self.parentContext ? [self.parentContext rad_saveToPersistentStore] : [RACSignal empty])];
+}
+
+- (RACSignal *)rad_countForFetchRequest:(NSFetchRequest *)request
+{
+	return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+		[self performBlockAndWait:^{
+			NSError *error;
+			NSUInteger count = [self countForFetchRequest:request error:&error];
+			if (error) {
+				[subscriber sendError:error];
+			} else {
+				[subscriber sendNext:@(count)];
+				[subscriber sendCompleted];
+			}
+		}];
+		return nil;
+	}];
+}
+
+- (RACSignal *)rad_obtainPermanentIDsForObjects:(NSArray *)objects
+{
+	return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+		[self performBlockAndWait:^{
+			NSError *error;
+			if ([self obtainPermanentIDsForObjects:objects error:&error]) {
+				[self performBlock:^{
+                    [subscriber sendNext:[objects mapWithSelector:@selector(objectID)]];
+                    [subscriber sendCompleted];
+                }];
+			} else {
+				[subscriber sendError:error];
+			}
+		}];
+		return nil;
+	}];
+}
+
+- (RACSignal *)rad_existingObjectWithID:(NSManagedObjectID *)objectID
+{
+	return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+		[self performBlockAndWait:^{
+			NSError *error;
+			NSManagedObject *object = [self existingObjectWithID:objectID error:&error];
+			if (error) {
+				[subscriber sendError:error];
+			} else {
+				[subscriber sendNext:object];
+				[subscriber sendCompleted];
+			}
+		}];
+		return nil;
+	}];
 }
 @end

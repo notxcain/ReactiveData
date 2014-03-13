@@ -8,7 +8,7 @@
 
 #import "NSManagedObject+ReactiveData.h"
 #import "NSManagedObjectContext+ReactiveData.h"
-#import "RADFetchRequestFactory.h"
+#import "RADFetchRequestGenerator.h"
 #import "NSManagedObjectContext+ReactiveData.h"
 #import <ReactiveCocoa/ReactiveCocoa.h>
 
@@ -50,9 +50,9 @@
     return [context rad_executeFetchRequestAndReturnFirstObject:request];
 }
 
-+ (id<RADFetchRequestFactory>)rad_requestFor;
++ (id<RADFetchRequestGenerator>)rad_requestFor;
 {
-	return [[RADFetchRequestFactory alloc] initWithEntityName:[self rad_bestGuessAtAnEntityName]];
+	return [[RADFetchRequestGenerator alloc] initWithEntityName:[self rad_bestGuessAtAnEntityName]];
 }
 
 + (NSString *)rad_bestGuessAtAnEntityName
@@ -121,29 +121,8 @@
 
 - (RACSignal *)rad_inContext:(NSManagedObjectContext *)otherContext
 {
-	return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
-		if (self.objectID.isTemporaryID) {
-			NSError *error;
-			BOOL success = [[self managedObjectContext] obtainPermanentIDsForObjects:@[self] error:&error];
-			if (!success) {
-				[subscriber sendError:error];
-				return nil;
-			}
-		}
-		RACDisposable *disposable = [[RACDisposable alloc] init];
-		[otherContext performBlock:^{
-			if (disposable.isDisposed) return;
-			NSError *error;
-			NSManagedObject *inContext = [otherContext existingObjectWithID:[self objectID] error:&error];
-			if (inContext) {
-				[subscriber sendNext:inContext];
-				[subscriber sendCompleted];
-			} else {
-				[subscriber sendError:error];
-			}
-		}];
-		return disposable;
-	}];
-	
+	return [[self.managedObjectContext rad_obtainPermanentIDsForObjects:@[self]] flattenMap:^RACStream *(NSArray *permanentObjectIDs) {
+        return [otherContext rad_existingObjectWithID:permanentObjectIDs.firstObject];
+    }];
 }
 @end

@@ -6,13 +6,13 @@
 //  Copyright (c) 2013 QIWI. All rights reserved.
 //
 
-#import "RADFetchRequestFactory.h"
+#import "RADFetchRequestGenerator.h"
 
-@interface RADFetchRequestFactory ()
+@interface RADFetchRequestGenerator ()
 @property (nonatomic, strong, readonly) NSString *entityName;
 @end
 
-@implementation RADFetchRequestFactory
+@implementation RADFetchRequestGenerator
 - (id)initWithEntityName:(NSString *)entityName
 {
     self = [super init];
